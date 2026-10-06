@@ -10,7 +10,9 @@ registrations. Do not substitute another MCP server or invent REST paths.
 1. For an unknown record, workflow, app, skill, API, operation, or identifier,
    call `search_paths` once with a focused natural-language description. Use the
    fields accepted by the connected WorkIQ schema. Treat discovery as grounded
-   only when the response contains a `/businessapps/...` path.
+   only when the response contains a `/businessapps/...` path. This searches
+   indexed metadata such as skills, tables, apps, APIs, and operations, not
+   business-record contents.
 2. For environment inventory, skip discovery and call `fetch` directly on
    `/businessapps/environments/`. Use the exact returned environment IDs; never
    assume a default environment.
@@ -19,10 +21,29 @@ registrations. Do not substitute another MCP server or invent REST paths.
    environment, and inspect only its relevant returned collection. Abstain when
    the exact environment or capability is absent.
 4. Follow exact returned paths with `fetch`, `get_schema`, or the effect-correct
-   write/action tool. Do not guess path segments, IDs, names, or casing.
+   write/action tool. When a procedure-oriented request returns a matching
+   `/skills/` path, fetch the best-matching skill before querying records or
+   invoking operations. The skill provides procedure guidance; it does not read
+   data or execute an action. Do not guess path segments, IDs, names, or casing.
 5. Before an unfamiliar write or action, call `get_schema` on the concrete
    path with the matching operation type. Schema availability does not grant
    authorization.
+
+Construct the one discovery query from the business domain, requested workflow
+or judgment, and expected decision, evidence distinction, or output. Do not
+reduce it to record names, product names, table nouns, or backend schema terms.
+`search_paths` ranks lexical overlap with indexed metadata text; it cannot
+recover workflow or output intent omitted from the query. More words are not
+automatically better: preserve a small set of discriminating terms from the
+user's request, and do not invent domain terminology or a skill name.
+
+For a request to review whether an item is ready to advance and separate
+satisfied, missing, and unknown criteria, prefer
+`readiness review advance satisfied missing unknown criteria` over
+`record process stage fields`. The first query preserves the requested workflow
+and output; the second keeps only generic schema concepts. For a request to
+prepare follow-up with decisions, commitments, open questions, and next actions,
+keep those terms rather than searching only for the record or table name.
 
 Discovery is read-only: use `search_paths`, not `do_action` on
 `/businessapps/me`. `do_action` remains appropriate for a discovered

@@ -8,7 +8,8 @@ substitute a separate endpoint, another MCP server, or an invented REST URL.
 
 1. Start intent-driven discovery with one focused `search_paths` call and a natural-language description of the
    business record, workflow, app, or operation. Use only fields accepted by the connected WorkIQ tool schema.
-   Treat discovery as grounded only when the response contains a `/businessapps/...` path.
+   Treat discovery as grounded only when the response contains a `/businessapps/...` path. This searches indexed
+   metadata such as skills, tables, apps, APIs, and operations, not business-record contents.
 2. Use `fetch` on `/businessapps/environments/` when the user explicitly asks to list environments or identify the
    default environment. Do not guess an environment ID.
 3. If `search_paths` errors or returns no `/businessapps/...` path, do not repeat or broaden the search. Use the
@@ -20,9 +21,28 @@ substitute a separate endpoint, another MCP server, or an invented REST URL.
 5. For an unknown path or identifier, discover the Business Applications resource this way — apps, tables, records,
    skills, APIs, and operations. Take each identifier from the returned paths. Do not guess an ID or name. Known
    structural inventory is the exception: use its direct `fetch` path, especially `/businessapps/environments/`.
+   When a procedure-oriented request returns a matching `/skills/` path, fetch the best-matching skill before
+   querying records or invoking operations. The skill provides procedure guidance; it does not read data or
+   execute an action.
 6. Use `get_schema` on the returned concrete path before an unfamiliar mutation or operation. Never fill in
    `{environmentId}`, `{tableName}`, `{recordId}`, `{appName}`, `{apiName}`, `{skillName}`, or operation names
    from memory.
+
+Construct the one discovery query from the business domain, requested workflow
+or judgment, and expected decision, evidence distinction, or output. Do not
+reduce it to record names, product names, table nouns, or backend schema terms.
+`search_paths` ranks lexical overlap with indexed metadata text; it cannot
+recover workflow or output intent omitted from the query. More words are not
+automatically better: preserve a small set of discriminating terms from the
+user's request, and do not invent domain terminology or a skill name.
+
+For a request to review whether an item is ready to advance and separate
+satisfied, missing, and unknown criteria, prefer
+`readiness review advance satisfied missing unknown criteria` over
+`record process stage fields`. The first query preserves the requested workflow
+and output; the second keeps only generic schema concepts. For a request to
+prepare follow-up with decisions, commitments, open questions, and next actions,
+keep those terms rather than searching only for the record or table name.
 
 Do not use `do_action` on `/businessapps/me` for discovery even if that route is
 exposed; use `search_paths` instead. The old route is POST-shaped and can be
